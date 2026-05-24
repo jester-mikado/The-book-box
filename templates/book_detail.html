@@ -71,7 +71,7 @@
 
         async function loadBook() {
 
-            const response = await fetch("http://127.0.0.1:8000/books")
+            const response = await fetch("/books")
             const books = await response.json()
 
             const book = books.find(b => b.id == bookId)
@@ -116,7 +116,7 @@
         async function loadReviews() {
 
             const response = await fetch(
-                `http://127.0.0.1:8000/reviews/${bookId}`
+                `/reviews/${bookId}`
             )
 
             const reviews = await response.json()
@@ -194,7 +194,7 @@
             }
 
             const response = await fetch(
-                `http://127.0.0.1:8000/reviews/${bookId}`,
+                `/reviews/${bookId}`,
                 {
                     method: "POST",
                     headers: {
