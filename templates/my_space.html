@@ -63,7 +63,7 @@
         async function loadUser() {
 
             const response = await fetch(
-                "http://127.0.0.1:8000/me",
+                "/me",
                 {
                     headers: {
                         "Authorization": `Bearer ${token}`
@@ -81,7 +81,7 @@
         async function showMyBooks() {
 
             const response = await fetch(
-                "http://127.0.0.1:8000/my-books",
+                "/my-books",
                 {
                     headers: {
                         "Authorization": `Bearer ${token}`
@@ -133,7 +133,7 @@
         async function showMyReviews() {
 
             const response = await fetch(
-                "http://127.0.0.1:8000/my-book-reviews",
+                "/my-book-reviews",
                 {
                     headers: {
                         "Authorization": `Bearer ${token}`
