@@ -3,7 +3,6 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from auth import get_current_user
 from fastapi.responses import RedirectResponse
-
 from database import Base, engine, get_db
 from models import User
 

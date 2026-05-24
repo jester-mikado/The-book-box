@@ -163,3 +163,42 @@ def my_book_reviews(
             })
 
     return result
+
+@router.delete("/books/{book_id}")
+def delete_book(
+    book_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+
+    book = db.query(Book).filter(
+        Book.id == book_id
+    ).first()
+
+    if not book:
+
+        raise HTTPException(
+            status_code=404,
+            detail="Book not found"
+        )
+
+    # only uploader can delete
+    if book.added_by != current_user.id:
+
+        raise HTTPException(
+            status_code=403,
+            detail="Not allowed to delete this book"
+        )
+
+    # delete reviews first
+    db.query(Review).filter(
+        Review.book_id == book.id
+    ).delete()
+
+    db.delete(book)
+
+    db.commit()
+
+    return {
+        "message": "Book deleted successfully"
+    }
