@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>The Book box - Book Details</title>
+    <link rel="stylesheet" href="/static/style.css?v=20">
+</head>
+
+<body>
+    <a href="/ui" class="btn">
+        ←
+    </a>
+
+    <br><br>
+
+    <div class="container">
+
+        <div class="hero" id="bookHero"></div>
+
+        <div class="form-card" id="reviewForm" style="display:none; margin-bottom:40px;">
+
+            <h1>Add Review</h1>
+
+            <div class="input-group">
+                <label>Rating (1-5)</label>
+                <input type="number" id="rating" min="1" max="5">
+            </div>
+
+            <div class="input-group">
+                <label>Comment</label>
+                <input type="text" id="comment">
+            </div>
+
+            <button class="btn" onclick="addReview()">
+                Submit Review
+            </button>
+
+        </div>
+
+        <h2 style="margin-bottom:20px;">Reviews</h2>
+
+        <div class="book-grid" id="reviewList"></div>
+
+
+    </div>
+    <div id="toast" style="
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        background: #111827;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        font-size: 15px;
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-20px);
+        transition: all 0.4s ease;
+    "></div>
+
+    <script>
+
+        const pathParts = window.location.pathname.split("/")
+        const bookId = pathParts[pathParts.length - 1]
+
+        function showReviewForm() {
+            document.getElementById("reviewForm").style.display = "block"
+        }
+
+        async function loadBook() {
+
+            const response = await fetch("http://127.0.0.1:8000/books")
+            const books = await response.json()
+
+            const book = books.find(b => b.id == bookId)
+
+            if (book) {
+
+                document.getElementById("bookHero").innerHTML = `
+
+            <h1>${book.title}</h1>
+
+            <p>
+                <strong>Author:</strong> ${book.author}
+            </p>
+
+            <p>
+                <strong>Genre:</strong> ${book.genre}
+            </p>
+
+            <p style="
+                margin-top:20px;
+                line-height:1.8;
+                color:#475569;
+                font-size:17px;
+            ">
+                <strong>Summary:</strong><br>
+                ${book.summary}
+            </p>
+
+            <h2 id="averageRating" style="margin-top:25px;">
+                ⭐ 0/5
+            </h2>
+
+            <br>
+
+            <button class="btn" onclick="showReviewForm()">
+                Add Review
+            </button>
+        `
+            }
+        }
+
+        async function loadReviews() {
+
+            const response = await fetch(
+                `http://127.0.0.1:8000/reviews/${bookId}`
+            )
+
+            const reviews = await response.json()
+
+            const container = document.getElementById("reviewList")
+            container.innerHTML = ""
+
+            let total = 0
+
+            reviews.forEach(review => {
+
+                total += review.rating
+
+                container.innerHTML += `
+
+            <div class="book-card">
+
+                <h3>⭐ ${review.rating}/5</h3>
+
+                <p>${review.comment}</p>
+
+                <br>
+
+                <p>
+                    <strong>— ${review.username}</strong>
+                </p>
+
+            </div>
+        `
+            })
+
+            if (reviews.length > 0) {
+
+                const average = (total / reviews.length).toFixed(1)
+
+                document.getElementById("averageRating").innerText =
+                    `⭐ ${average}/5 Average Rating`
+            }
+        }
+
+        function showToast(message) {
+
+            const toast = document.getElementById("toast")
+
+            toast.innerText = message
+
+            toast.style.opacity = "1"
+            toast.style.visibility = "visible"
+            toast.style.transform = "translateY(0)"
+
+            setTimeout(() => {
+                toast.style.opacity = "0"
+                toast.style.visibility = "hidden"
+                toast.style.transform = "translateY(-20px)"
+            }, 2000)
+        }
+        async function addReview() {
+
+            const token = localStorage.getItem("token")
+
+            if (!token) {
+
+                showToast("Please login first")
+
+                return
+            }
+
+
+            const rating = parseInt(document.getElementById("rating").value)
+            const comment = document.getElementById("comment").value
+
+            if (rating < 1 || rating > 5 || !comment) {
+                showToast("Please enter rating 1-5 and comment")
+                return
+            }
+
+            const response = await fetch(
+                `http://127.0.0.1:8000/reviews/${bookId}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        rating: rating,
+                        comment: comment
+                    })
+                }
+            )
+
+            const data = await response.json()
+
+            showToast(data.message)
+
+            document.getElementById("reviewForm").style.display = "none"
+
+            loadReviews()
+        }
+
+        loadBook()
+        loadReviews()
+
+    </script>
+
+</body>
+
+</html>

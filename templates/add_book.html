@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>The Book box - Add Book</title>
+
+    <link rel="stylesheet" href="/static/style.css?v=10">
+</head>
+
+<body>
+    <a href="/ui" class="btn">
+        ←
+    </a>
+
+    <div class="form-card">
+
+        <h1>Add Book</h1>
+
+        <div class="input-group">
+            <label>Book Title</label>
+            <input type="text" id="title">
+        </div>
+
+        <div class="input-group">
+            <label>Author</label>
+            <input type="text" id="author">
+        </div>
+
+        <div class="input-group">
+
+            <label>Genre</label>
+
+            <select id="genre">
+
+                <option>Fantasy</option>
+
+                <option>Fiction</option>
+
+                <option>Self Help</option>
+
+                <option>Finance</option>
+
+                <option>Productivity</option>
+
+                <option>Philosophy</option>
+
+                <option>Science</option>
+
+                <option>Horror</option>
+
+                <option>Romance</option>
+
+            </select>
+
+        </div>
+        <div class="input-group">
+
+            <label>Summary</label>
+
+            <textarea id="summary" class="summary-box"></textarea>
+
+        </div>
+
+        <button class="btn" onclick="addBook()">
+            Add Book
+        </button>
+
+    </div>
+
+    <div id="toast" style="
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: #111827;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            font-size: 15px;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-20px);
+            transition: all 0.4s ease;
+        "></div>
+
+    <script>
+        const token = localStorage.getItem("token")
+
+        if (!token) {
+
+            window.location.href = "/login-page"
+        }
+
+        async function addBook() {
+
+            const token = localStorage.getItem("token")
+
+            console.log("TOKEN:", token)
+
+            if (!token) {
+
+                showToast("Please login first")
+                return
+            }
+
+            const response = await fetch(
+                "http://127.0.0.1:8000/books",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+
+                    body: JSON.stringify({
+                        title: document.getElementById("title").value,
+                        author: document.getElementById("author").value,
+                        genre: document.getElementById("genre").value,
+                        summary: document.getElementById("summary").value
+                    })
+                }
+            )
+
+            const data = await response.json()
+
+            console.log(data)
+
+            if (response.ok) {
+
+                showToast("Book Added Successfully 🔥")
+
+                window.location.href = "/ui"
+
+            } else {
+
+                showToast(data.detail)
+            }
+        }
+        function showToast(message) {
+
+            const toast = document.getElementById("toast")
+
+            toast.innerText = message
+
+            toast.style.opacity = "1"
+            toast.style.visibility = "visible"
+            toast.style.transform = "translateY(0)"
+
+            setTimeout(() => {
+                toast.style.opacity = "0"
+                toast.style.visibility = "hidden"
+                toast.style.transform = "translateY(-20px)"
+            }, 2000)
+        }
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>The Book box</title>
+    <link rel="stylesheet" href="/static/style.css?v=100">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="navbar">
+            <div class="logo">📚 The Book box</div>
+
+            <div class="nav-links" id="navLinks">
+                <a href="#" id="profileLink" onclick="toggleProfileMenu()">Profile</a>
+            </div>
+        </div>
+
+        <div id="profileMenu" class="profile-menu">
+
+            <h3 id="menuUsername" style="
+        margin-bottom:20px;
+        color:#0f172a;
+    ">
+                Hey User
+            </h3>
+            <button class="close-btn" onclick="toggleProfileMenu()">×</button>
+
+            <a href="/add-book-page">➕ Add Book</a>
+
+            <a href="/my-space">📚 Your Books & Reviews</a>
+
+            <button onclick="logout()">🚪 Logout</button>
+        </div>
+
+        <div class="hero">
+            <h1>Discover Amazing Books</h1>
+            <p>Read reviews, rate books, and explore a modern online book review platform.</p>
+        </div>
+        <div style="
+    display:flex;
+    gap:12px;
+    margin-bottom:25px;
+">
+
+            <input type="text" id="searchInput" placeholder="Search books..." style="
+            flex:1;
+            padding:15px;
+            border-radius:14px;
+            border:1px solid #dbe2ea;
+            outline:none;
+            font-size:15px;
+        ">
+
+            <select id="searchType" style="
+            padding:15px;
+            border-radius:14px;
+            border:1px solid #dbe2ea;
+            outline:none;
+            font-size:15px;
+        ">
+                <option value="title">Book Name</option>
+                <option value="author">Author</option>
+            </select>
+
+        </div>
+        <select id="genreFilter" class="genre-filter">
+            <option value="All">All Genres</option>
+            <option value="Fantasy">Fantasy</option>
+            <option value="Fiction">Fiction</option>
+            <option value="Self Help">Self Help</option>
+            <option value="Finance">Finance</option>
+            <option value="Productivity">Productivity</option>
+            <option value="Philosophy">Philosophy</option>
+            <option value="Science">Science</option>
+            <option value="Horror">Horror</option>
+            <option value="Romance">Romance</option>
+        </select>
+
+        <div class="book-grid" id="bookList"></div>
+
+    </div>
+
+    <script>
+
+        let allBooks = []
+
+        function toggleProfileMenu() {
+
+            const menu =
+                document.getElementById("profileMenu")
+
+            if (menu.style.display === "block") {
+
+                menu.style.display = "none"
+
+            } else {
+
+                menu.style.display = "block"
+
+                loadMenuUser()
+            }
+        }
+        document.addEventListener("click", function (event) {
+            const menu = document.getElementById("profileMenu")
+            const profileLink = document.getElementById("profileLink")
+
+            if (!menu.contains(event.target) && !profileLink.contains(event.target)) {
+                menu.style.display = "none"
+            }
+        })
+
+        async function loadBooks() {
+            const response = await fetch("http://127.0.0.1:8000/books")
+            allBooks = await response.json()
+            displayBooks(allBooks)
+        }
+
+        function displayBooks(books) {
+            const container = document.getElementById("bookList")
+            container.innerHTML = ""
+
+            books.forEach(book => {
+                container.innerHTML += `
+            <div class="book-card">
+                <h2>${book.title}</h2>
+                <p><strong>Author:</strong> ${book.author}</p>
+                <p><strong>Genre:</strong> ${book.genre}</p>
+                <p> - ${book.uploaded_by}</p>
+                <a class="btn" href="/book/${book.id}">
+                    View Details
+                </a>
+            </div>
+        `
+            })
+        }
+        function searchBooks() {
+
+            const keyword = document
+                .getElementById("searchInput")
+                .value
+                .toLowerCase()
+
+            const searchType = document
+                .getElementById("searchType")
+                .value
+
+            const filtered = allBooks.filter(book => {
+
+                return book[searchType]
+                    .toLowerCase()
+                    .includes(keyword)
+            })
+
+            displayBooks(filtered)
+        }
+
+        document
+            .getElementById("searchInput")
+            .addEventListener("input", searchBooks)
+
+        document
+            .getElementById("searchType")
+            .addEventListener("change", searchBooks)
+
+        document.getElementById("genreFilter").addEventListener("change", function () {
+            const selected = this.value
+
+            if (selected === "All") {
+                displayBooks(allBooks)
+            } else {
+                const filtered = allBooks.filter(book => book.genre === selected)
+                displayBooks(filtered)
+            }
+        })
+
+        function logout() {
+            localStorage.removeItem("token")
+            window.location.href = "login-page"
+        }
+        function setupNavbar() {
+
+            const token = localStorage.getItem("token")
+
+            const nav =
+                document.getElementById("navLinks")
+
+            if (token) {
+
+                nav.innerHTML = `
+            <a
+                href="#"
+                id="profileLink"
+                onclick="toggleProfileMenu()"
+            >
+                Profile
+            </a>
+        `
+
+            } else {
+
+                nav.innerHTML = `
+
+            <a href="/login-page">
+                Login
+            </a>
+
+            <a href="/register-page">
+                Register
+            </a>
+
+        `
+            }
+        }
+
+        setupNavbar()
+
+        loadBooks()
+
+        async function showMyBooks() {
+
+            const token = localStorage.getItem("token")
+
+            if (!token) {
+                window.location.href = "/login-page"
+                return
+            }
+
+            const response = await fetch(
+                "http://127.0.0.1:8000/my-books",
+                {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                }
+            )
+
+            const books = await response.json()
+
+            const container = document.getElementById("bookList")
+            container.innerHTML = ""
+
+            document.getElementById("genreFilter").style.display = "none"
+
+            if (books.length === 0) {
+                container.innerHTML = `
+            <div class="book-card">
+                <h2>No books uploaded yet</h2>
+                <p>Start by adding your first book.</p>
+            </div>
+        `
+                return
+            }
+
+            books.forEach(book => {
+
+                container.innerHTML += `
+            <div class="book-card">
+                <h2>${book.title}</h2>
+                <p><strong>Author:</strong> ${book.author}</p>
+                <p><strong>Genre:</strong> ${book.genre}</p>
+                <p>${book.summary}</p>
+
+                <a class="btn" href="/book/${book.id}">
+                    View Details
+                </a>
+            </div>
+        `
+            })
+        }
+        async function loadMenuUser() {
+
+            const token = localStorage.getItem("token")
+
+            if (!token) return
+
+            const response = await fetch(
+                "http://127.0.0.1:8000/me",
+                {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                }
+            )
+
+            const data = await response.json()
+
+            document.getElementById("menuUsername")
+                .innerText = `Hey ${data.username}`
+        }
+
+        async function showMyReviews() {
+
+            const token = localStorage.getItem("token")
+
+            if (!token) {
+                window.location.href = "/login-page"
+                return
+            }
+
+            const response = await fetch(
+                "http://127.0.0.1:8000/my-book-reviews",
+                {
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                }
+            )
+
+            const reviews = await response.json()
+
+            const container = document.getElementById("bookList")
+            container.innerHTML = ""
+
+            document.getElementById("genreFilter").style.display = "none"
+
+            if (reviews.length === 0) {
+                container.innerHTML = `
+            <div class="book-card">
+                <h2>No reviews yet</h2>
+                <p>No one has reviewed your uploaded books yet.</p>
+            </div>
+        `
+                return
+            }
+
+            reviews.forEach(review => {
+
+                container.innerHTML += `
+            <div class="book-card">
+                <h2>${review.book_title}</h2>
+
+                <h3>⭐ ${review.rating}/5</h3>
+
+                <p>${review.comment}</p>
+
+                <p>
+                    <strong>Reviewed by:</strong>
+                    ${review.username}
+                </p>
+
+                <p style="color:#64748b;">
+                    ${review.time}
+                </p>
+            </div>
+        `
+            })
+        }
+        loadUser()
+    </script>
+
+</body>
+
+</html>

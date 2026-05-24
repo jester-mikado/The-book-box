@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>The Book box - Register</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="form-card">
+
+    <h1>The Book box</h1>
+
+    <div class="input-group">
+        <label>Username</label>
+        <input type="text" id="username">
+    </div>
+
+    <div class="input-group">
+        <label>Email</label>
+        <input type="email" id="email">
+    </div>
+
+    <div class="input-group">
+        <label>New Password</label>
+        <input type="password" id="password">
+    </div>
+
+    <button class="btn" onclick="register()">Register</button>
+
+</div>
+<div
+    id="toast"
+    style="
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        background: #111827;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        font-size: 15px;
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-20px);
+        transition: all 0.4s ease;
+    "
+></div>
+
+<script>
+function showToast(message) {
+
+    const toast = document.getElementById("toast")
+
+    toast.innerText = message
+
+    toast.style.opacity = "1"
+    toast.style.visibility = "visible"
+    toast.style.transform = "translateY(0)"
+
+    setTimeout(() => {
+        toast.style.opacity = "0"
+        toast.style.visibility = "hidden"
+        toast.style.transform = "translateY(-20px)"
+    }, 2000)
+}
+
+async function register() {
+
+    const response = await fetch(
+        "http://127.0.0.1:8000/auth/register",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                username: document.getElementById("username").value,
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value
+            })
+        }
+    )
+
+    const data = await response.json()
+
+    showToast("Registration Successful!")
+
+    setTimeout(() => {
+        window.location.href = "/login-page"
+    }, 500)
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>The Book box - Login</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+    <div class="form-card">
+
+        <h1>The Book box</h1>
+
+        <div class="input-group">
+            <label>Username</label>
+            <input type="text" id="username">
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="password">
+        </div>
+
+        <button class="btn" onclick="loginUser()">
+            Login
+        </button>
+        <p style="
+    margin-top:20px;
+    text-align:center;
+    color:#64748b;
+">
+
+            Haven't registered yet?
+
+            <a href="/register-page" style="
+            color:#2563eb;
+            text-decoration:none;
+            font-weight:600;
+            margin-left:5px;
+        ">
+                Register
+            </a>
+
+        </p>
+
+    </div>
+    <div id="toast" style="
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        background: #111827;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        font-size: 15px;
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-20px);
+        transition: all 0.4s ease;
+    "></div>
+
+    <script>
+
+        async function loginUser() {
+
+            const username =
+                document.getElementById("username").value
+
+            const password =
+                document.getElementById("password").value
+
+
+            const formData = new URLSearchParams()
+
+            formData.append("username", username)
+            formData.append("password", password)
+
+            try {
+
+                const response = await fetch(
+                    "http://127.0.0.1:8000/auth/login",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/x-www-form-urlencoded"
+                        },
+
+                        body: formData
+                    }
+                )
+
+                const data = await response.json()
+
+                console.log(data)
+
+                if (data.access_token) {
+
+                    localStorage.setItem(
+                        "token",
+                        data.access_token
+                    )
+
+                    showToast("Login Successful!")
+
+                    setTimeout(() => {
+                        window.location.href = "/ui"
+                    }, 500)
+
+                } else {
+
+                    showToast(data.detail)
+                }
+
+            } catch (error) {
+
+                console.log(error)
+
+                showToast("Login Failed")
+            }
+        }
+        function showToast(message) {
+
+            const toast = document.getElementById("toast")
+
+            toast.innerText = message
+
+            toast.style.opacity = "1"
+            toast.style.visibility = "visible"
+            toast.style.transform = "translateY(0)"
+
+            setTimeout(() => {
+                toast.style.opacity = "0"
+                toast.style.visibility = "hidden"
+                toast.style.transform = "translateY(-20px)"
+            }, 2000)
+        }
+
+    </script>
+
+</body>
+
+</html>
